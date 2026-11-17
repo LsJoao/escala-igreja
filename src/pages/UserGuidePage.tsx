@@ -196,61 +196,61 @@ export const UserGuidePage: React.FC = () => {
             <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
               <Video className="w-4 h-4 text-[#0071E3] shrink-0 mt-0.5" />
               <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
-                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">1. Equipamentos & Matriz de Habilitação</strong>
-                Em <strong>Equipamentos</strong>, cadastre câmeras, mesas de som, iluminação e projeção. Na <strong>Matriz de Habilitação</strong>, clique em qualquer célula para classificar cada membro como <em>★ Instrutor</em>, <em>✓ Apto</em> ou <em>⏳ Em Treinamento</em>.
+                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">1. Equipamentos & Categorias Personalizáveis</strong>
+                Em <strong>Equipamentos</strong>, cadastre câmeras, mesas de som, iluminação, projeção e transmissão. Use o botão <strong>Categorias</strong> (ou <em>+ Criar / Editar</em> dentro do formulário) para criar novas categorias, renomear nomes e trocar cores das etiquetas — equipamentos de categorias excluídas são migrados automaticamente.
+              </div>
+            </div>
+
+            <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
+              <Users className="w-4 h-4 text-[#0071E3] shrink-0 mt-0.5" />
+              <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
+                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">2. Apontar Equipamentos Aptos (Voluntários & Matriz)</strong>
+                Defina o que cada membro está <strong>Apto a Operar</strong> por dois caminhos: direto na aba <strong>Voluntários</strong> (clicando em <em>Apontar / Editar</em> no cartão do membro ou selecionando no formulário de cadastro/edição) ou pela <strong>Matriz de Habilitação</strong>, classificando cada posto como <em>★ Instrutor</em>, <em>✓ Apto</em> ou <em>⏳ Em Treinamento</em>.
               </div>
             </div>
 
             <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
               <CalendarCheck className="w-4 h-4 text-[#0071E3] shrink-0 mt-0.5" />
               <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
-                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">2. Cultos, Recorrência Semanal & Calendário</strong>
-                Em <strong>Cultos & Escalas</strong>, crie cultos avulsos ou recorrentes (2 ou 4 semanas consecutivas). Ao escalar operadores, o sistema destaca quem está <strong>✓ Apto</strong> e alerta sobre <strong>⚠ Indisponível</strong> ou <strong>⚠ Já Escalado</strong>. Use também o botão <em>Imprimir</em> para fixar a escala na cabine.
+                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">3. Cultos, Recorrência Semanal & Impressão A4 com Logo</strong>
+                Em <strong>Cultos & Escalas</strong>, crie cultos avulsos ou recorrentes (2 ou 4 semanas). Ao escalar operadores, o sistema destaca quem está <strong>✓ Apto</strong> e alerta sobre <strong>⚠ Indisponível</strong> ou <strong>⚠ Já Escalado</strong>. Tanto as escalas quanto o <strong>Calendário Mensal</strong> podem ser impressos em formato <strong>A4</strong> já com a logo oficial da igreja no cabeçalho.
               </div>
             </div>
 
             <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
               <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
-                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">3. Aprovações, WhatsApp Pré-definido & Exclusão Segura</strong>
-                Na aba <strong>Voluntários</strong>, aprove ou recuse cadastros pendentes em 1 clique. O botão <strong>WhatsApp</strong> no cartão de cada membro abre mensagens prontas e editáveis. Caso precise remover um usuário, o botão de lixeira abre confirmação segura e desocupa automaticamente as escalas vinculadas.
+                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">4. Aprovações ao Vivo, WhatsApp & Exclusão Segura</strong>
+                Na aba <strong>Voluntários</strong>, aprove ou negue novos cadastros em 1 clique. O botão <strong>WhatsApp</strong> abre mensagens prontas e editáveis. Ao remover um usuário pela lixeira, o modal solicita confirmação segura e limpa automaticamente habilitações, indisponibilidades e escalas futuras vinculadas.
               </div>
             </div>
 
             <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
-              <Users className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+              <Building2 className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
               <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
-                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">4. Pré-visualizar Visão Voluntário</strong>
-                No menu do avatar (canto superior direito), você pode alternar entre <strong>Visão Líder</strong> e <strong>Voluntário</strong> para testar o aplicativo exatamente como sua equipe enxerga — um banner no topo permite voltar à Visão Líder com 1 clique.
-              </div>
-            </div>
-
-            <div className="pdf-card p-4 print:p-2.5 rounded-2xl print:rounded-xl bg-[#F5F5F7] border border-black/[0.04] flex items-start gap-3">
-              <Building2 className="w-4 h-4 text-[#0071E3] shrink-0 mt-0.5" />
-              <div className="text-xs print:text-[10px] text-gray-600 leading-relaxed print:leading-snug">
-                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">5. Painel de Igrejas & Apresentação Executiva</strong>
-                Líderes e Administradores do Ministério contam com o botão <strong>Apresentação (PDF)</strong> e <strong>Carregar Exemplo</strong> na barra superior. O Super Admin dispõe ainda do painel <strong>Gerenciar Igrejas</strong> para cadastrar congregações e alternar entre unidades.
+                <strong className="text-[#1D1D1F] block text-xs print:text-[10.5px] mb-0.5">5. Barra da Liderança, Visão Voluntário & Multi-Igreja</strong>
+                Líderes e ADMs têm acesso rápido na barra superior ao <strong>Convite</strong> (cópia/WhatsApp), <strong>Como Usar (PDF)</strong>, <strong>Apresentação (PDF)</strong> (em padrão A4) e <strong>Carregar Exemplo</strong>. No menu do avatar é possível testar a <strong>Visão Voluntário</strong>, e o Super Admin conta com o painel <strong>Gerenciar Igrejas</strong> para múltiplas congregações.
               </div>
             </div>
           </div>
         </section>
 
-        {/* Passo 4: Boas Práticas de Segurança */}
+        {/* Passo 4: Boas Práticas de Segurança & Impressão */}
         <section className="pdf-card p-5 print:p-3 rounded-3xl print:rounded-xl bg-[#0071E3]/5 border border-[#0071E3]/15 space-y-1.5">
           <div className="flex items-center gap-2 text-[#0071E3] font-bold text-xs print:text-[10.5px] uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>Boas Práticas & Segurança da Sua Conta</span>
+            <span>Boas Práticas, Segurança & Impressão em PDF (A4)</span>
           </div>
           <ul className="list-disc pl-4 space-y-1 print:space-y-0.5 text-xs print:text-[10px] text-gray-700 leading-relaxed print:leading-snug">
             <li>Não compartilhe sua senha pessoal nem sua conta Google conectada com outros operadores.</li>
             <li>Clique sempre em <strong>Sair da Conta</strong> após utilizar o sistema em computadores compartilhados da cabine de mídia.</li>
-            <li>Todos os campos e links contam com validação automática contra injeção de código e proteção de sessão por perfil.</li>
+            <li>Todos os PDFs (Manual, Apresentação, Escalas e Calendário) utilizam folha padrão <strong>A4 (210×297 mm)</strong> com logo centralizada e validação de dados contra acessos indevidos.</li>
           </ul>
         </section>
 
         {/* Rodapé */}
         <div className="pt-6 print:pt-3 border-t border-black/[0.08] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs print:text-[9.5px] text-gray-400">
-          <span>Connect Minist • MídiaEscala © 2026 — Manual Oficial do Usuário</span>
+          <span>Connect Minist • MídiaEscala © 2026 — Manual Oficial do Usuário (Formato A4)</span>
           <span>Salve em PDF ou imprima para compartilhar no grupo da equipe</span>
         </div>
       </div>
