@@ -23,7 +23,6 @@ import { useChurch } from '../../contexts/ChurchContext';
 
 export const Sidebar: React.FC = () => {
   const { isLeader, isSuperAdmin, isMinistryAdmin, slots, currentMember } = useChurch();
-  const isAdmin = isSuperAdmin || isMinistryAdmin;
 
   const myPendingCount = slots.filter(
     (s) => s.memberId === currentMember?.id && s.status === 'pending'
@@ -76,7 +75,7 @@ export const Sidebar: React.FC = () => {
       label: 'Como Usar (PDF)',
       icon: BookOpen,
     },
-    ...(isAdmin
+    ...(isLeader
       ? [
           {
             to: '/executive-presentation',

@@ -11,7 +11,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import { OfflineIndicator } from './components/pwa/OfflineIndicator';
-import { Logo } from './components/ui/Logo';
+import { BrandLogo as Logo } from './components/ui/BrandLogo';
 
 import { AuthPage } from './pages/AuthPage';
 import { Dashboard } from './pages/Dashboard';
@@ -29,8 +29,7 @@ import { UserGuidePage } from './pages/UserGuidePage';
 
 const AppContent: React.FC = () => {
   const { currentUser, loading, logout } = useAuth();
-  const { loadingChurch, isSuperAdmin, isMinistryAdmin, currentMember, church } = useChurch();
-  const isAdmin = isSuperAdmin || isMinistryAdmin;
+  const { loadingChurch, isSuperAdmin, isLeader, currentMember, church } = useChurch();
 
   if (loading || loadingChurch) {
     return (
@@ -86,10 +85,10 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F7] text-[#1D1D1F] transition-colors pb-16 lg:pb-0">
+    <div className="app-shell min-h-screen flex flex-col bg-[#F5F5F7] text-[#1D1D1F] transition-colors pb-16 lg:pb-0 print:pb-0">
       <Navbar />
 
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+      <div className="app-body flex-1 flex max-w-7xl w-full mx-auto">
         <Sidebar />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
@@ -105,7 +104,7 @@ const AppContent: React.FC = () => {
             <Route path="/how-to-use" element={<UserGuidePage />} />
             <Route
               path="/executive-presentation"
-              element={isAdmin ? <ExecutivePresentationPage /> : <Navigate to="/" replace />}
+              element={isLeader ? <ExecutivePresentationPage /> : <Navigate to="/" replace />}
             />
             <Route
               path="/churches"

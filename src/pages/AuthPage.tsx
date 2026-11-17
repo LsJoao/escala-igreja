@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useChurch } from '../contexts/ChurchContext';
-import { Logo } from '../components/ui/Logo';
+import { BrandLogo as Logo } from '../components/ui/BrandLogo';
 import { Sparkles, LogIn, UserPlus, KeyRound, ArrowRight, ShieldCheck, Info, Lock } from 'lucide-react';
 
 export const AuthPage: React.FC = () => {

@@ -25,7 +25,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useChurch } from '../../contexts/ChurchContext';
 import { Avatar } from '../ui/Avatar';
 import { RoleBadge } from '../ui/Badge';
-import { Logo } from '../ui/Logo';
+import { BrandLogo as Logo } from '../ui/BrandLogo';
 import { PWAInstallButton } from '../pwa/PWAInstallButton';
 import { openSafeExternalUrl } from '../../utils/security';
 
@@ -56,8 +56,6 @@ export const Navbar: React.FC = () => {
   const [newChurchName, setNewChurchName] = useState('');
   const [isCreatingChurch, setIsCreatingChurch] = useState(false);
   const [churchModalError, setChurchModalError] = useState('');
-
-  const isAdmin = isSuperAdmin || isMinistryAdmin;
 
   const handleCopyInviteCode = () => {
     if (!church?.inviteCode) return;
@@ -101,11 +99,86 @@ export const Navbar: React.FC = () => {
     }
   };
 
+  const renderActionPills = (compact = false) => (
+    <>
+      {church && (
+        <div
+          className={`flex items-center gap-1.5 rounded-full bg-black/[0.04] text-xs whitespace-nowrap shrink-0 ${
+            compact ? 'px-2.5 py-1' : 'px-3 py-1'
+          }`}
+        >
+          <span className="text-gray-500">Convite:</span>
+          <button
+            onClick={handleCopyInviteCode}
+            className="font-mono font-bold text-[#0071E3] hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            title="Clique para copiar código"
+          >
+            {church.inviteCode}
+            {copiedCode ? <Check className="w-3 h-3 text-emerald-600 shrink-0" /> : <Copy className="w-3 h-3 shrink-0" />}
+          </button>
+          <button
+            onClick={handleShareWhatsAppInvite}
+            className="ml-0.5 text-emerald-600 hover:text-emerald-700 cursor-pointer shrink-0"
+            title="Compartilhar no WhatsApp"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Gestão de Igrejas exclusivo para Super Admin */}
+      {isSuperAdmin && (
+        <Link
+          to="/churches"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0071E3] text-white hover:bg-[#0077ED] shadow-xs cursor-pointer whitespace-nowrap shrink-0"
+          title="Gerenciar todas as igrejas e congregações cadastradas"
+        >
+          <Building2 className="w-3.5 h-3.5 shrink-0" />
+          <span>Gerenciar Igrejas</span>
+        </Link>
+      )}
+
+      {/* Manual de Como Usar em PDF (Para todos os usuários) */}
+      <Link
+        to="/how-to-use"
+        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-black/[0.04] transition-colors whitespace-nowrap shrink-0"
+        title="Manual ilustrado de como usar o aplicativo em PDF"
+      >
+        <BookOpen className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
+        <span>Como Usar (PDF)</span>
+      </Link>
+
+      {/* Link para Apresentação Executiva em PDF (Para Líder do Ministério e ADM) */}
+      {isLeader && (
+        <Link
+          to="/executive-presentation"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-black/[0.04] transition-colors whitespace-nowrap shrink-0"
+          title="Apresentação executiva do app e lógica de governança em PDF (Líderes e ADM)"
+        >
+          <FileText className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
+          <span>Apresentação (PDF)</span>
+        </Link>
+      )}
+
+      {isLeader && (
+        <button
+          onClick={handleSeed}
+          disabled={isSeeding}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
+          title="Preenche equipamentos, voluntários e culto de exemplo"
+        >
+          <Sparkles className="w-3.5 h-3.5 shrink-0" />
+          <span>{isSeeding ? 'Carregando...' : 'Carregar Exemplo'}</span>
+        </button>
+      )}
+    </>
+  );
+
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/85 border-b border-black/[0.06] transition-colors">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/90 border-b border-black/[0.06] transition-colors no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         {/* Logo e Nome da Aplicação */}
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
           <Logo
             size="md"
             showText={true}
@@ -113,74 +186,9 @@ export const Navbar: React.FC = () => {
           />
         </Link>
 
-        {/* Centro / Ações Rápidas de Igreja */}
-        <div className="hidden md:flex items-center gap-2">
-          {church && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/[0.04] text-xs">
-              <span className="text-gray-500">Convite:</span>
-              <button
-                onClick={handleCopyInviteCode}
-                className="font-mono font-bold text-[#0071E3] hover:underline flex items-center gap-1 cursor-pointer"
-                title="Clique para copiar código"
-              >
-                {church.inviteCode}
-                {copiedCode ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-              </button>
-              <button
-                onClick={handleShareWhatsAppInvite}
-                className="ml-1 text-emerald-600 hover:text-emerald-700 cursor-pointer"
-                title="Compartilhar no WhatsApp"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Gestão de Igrejas exclusivo para Super Admin */}
-          {isSuperAdmin && (
-            <Link
-              to="/churches"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0071E3] text-white hover:bg-[#0077ED] shadow-xs cursor-pointer"
-              title="Gerenciar todas as igrejas e congregações cadastradas"
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Gerenciar Igrejas</span>
-            </Link>
-          )}
-
-          {/* Manual de Como Usar em PDF (Para todos os usuários) */}
-          <Link
-            to="/how-to-use"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-black/[0.04] transition-colors"
-            title="Manual ilustrado de como usar o aplicativo em PDF"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-[#0071E3]" />
-            <span>Como Usar (PDF)</span>
-          </Link>
-
-          {/* Link para Apresentação Executiva em PDF (Exclusivo ADM) */}
-          {isAdmin && (
-            <Link
-              to="/executive-presentation"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-600 hover:bg-black/[0.04] transition-colors"
-              title="Apresentação executiva do app e lógica de governança em PDF (Exclusivo ADM)"
-            >
-              <FileText className="w-3.5 h-3.5 text-[#0071E3]" />
-              <span>Apresentação (PDF)</span>
-            </Link>
-          )}
-
-          {isLeader && (
-            <button
-              onClick={handleSeed}
-              disabled={isSeeding}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
-              title="Preenche equipamentos, voluntários e culto de exemplo"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isSeeding ? 'Carregando...' : 'Carregar Exemplo'}</span>
-            </button>
-          )}
+        {/* Centro / Ações Rápidas de Igreja em Desktop Amplo */}
+        <div className="hidden xl:flex items-center gap-1.5 min-w-0">
+          {renderActionPills(false)}
         </div>
 
         {/* Lado Direito: PWA, Notificações e Perfil */}
@@ -355,6 +363,13 @@ export const Navbar: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Faixa de Ações Rápidas em Telas Médias/Pequenas (sempre visível e sem quebra de linha) */}
+      <div className="xl:hidden border-t border-black/[0.05] bg-[#F5F5F7]/75">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {renderActionPills(true)}
         </div>
       </div>
 
