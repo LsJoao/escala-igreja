@@ -17,13 +17,19 @@
   scrollbar-width: none;
 }
 
+/* Padrão de Folha A4 (210mm x 297mm) no nível raiz para o diálogo de impressão selecionar A4 por padrão */
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+@page a4sheet {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
 /* Otimização de Impressão para Mural da Cabine de Mídia e Exportação PDF (A4 exato sem vazar da folha) */
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 10mm;
-  }
-
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -65,13 +71,15 @@
   }
 
   .pdf-sheet {
+    page: a4sheet;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 190mm !important;
+    min-height: 0 !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     overflow: visible !important;
   }
 
@@ -99,5 +107,18 @@
   tr {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .pdf-logo {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .pdf-logo img {
+    display: block !important;
+    max-height: 44px !important;
+    width: auto !important;
+    object-fit: contain !important;
   }
 }

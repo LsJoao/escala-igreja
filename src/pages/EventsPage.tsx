@@ -26,6 +26,7 @@ import {
 import { useChurch } from '../contexts/ChurchContext';
 import { Avatar } from '../components/ui/Avatar';
 import { SlotStatusBadge, CategoryBadge } from '../components/ui/Badge';
+import { BrandLogo } from '../components/ui/BrandLogo';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { EventSchedule, Slot, EventType, SlotStatus } from '../types';
 import { getLocalDateStr, getLocalTodayStr, isValidDateStr, openSafeExternalUrl } from '../utils/security';
@@ -290,7 +291,19 @@ export const EventsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-300">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-300 print:pb-0">
+      {/* Cabeçalho Exclusivo para Impressão PDF com Logo Centralizada */}
+      <div className="hidden print:flex items-center justify-between gap-4 border-b border-black/[0.08] pb-3 mb-4">
+        <BrandLogo
+          size="md"
+          showText={true}
+          subtitle={church?.name ? `${church.name} • Escala de Mídia` : 'Escala de Mídia'}
+        />
+        <span className="text-[11px] font-semibold text-gray-500">
+          Mural Oficial da Cabine de Mídia
+        </span>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

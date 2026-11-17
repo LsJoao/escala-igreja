@@ -9,7 +9,11 @@
         "name": { "type": "string", "maxLength": 100 },
         "inviteCode": { "type": "string", "maxLength": 32 },
         "createdAt": { "type": "string" },
-        "leaderId": { "type": "string", "maxLength": 128 }
+        "leaderId": { "type": "string", "maxLength": 128 },
+        "equipmentCategories": {
+          "type": "array",
+          "description": "Categorias personalizadas de equipamentos do ministério"
+        }
       },
       "required": ["name", "inviteCode", "leaderId"]
     },
@@ -42,7 +46,7 @@
         "id": { "type": "string", "maxLength": 128 },
         "churchId": { "type": "string", "maxLength": 128 },
         "name": { "type": "string", "maxLength": 100 },
-        "category": { "type": "string", "enum": ["video", "audio", "lighting", "projection", "broadcast", "other"] },
+        "category": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_-]+$" },
         "description": { "type": "string", "maxLength": 300 },
         "status": { "type": "string", "enum": ["available", "maintenance"] },
         "createdAt": { "type": "string", "maxLength": 64 }

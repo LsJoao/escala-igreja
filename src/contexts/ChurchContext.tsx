@@ -29,6 +29,9 @@ import {
   SwapRequest,
   NotificationItem,
   SkillLevel,
+  EquipmentCategoryItem,
+  DEFAULT_EQUIPMENT_CATEGORIES,
+  CategoryBadgeVariant,
 } from '../types';
 import {
   assertSafeText,
@@ -75,7 +78,9 @@ interface ChurchContextType {
   deleteMember: (id: string) => Promise<void>;
   approveMember: (id: string) => Promise<void>;
   rejectMember: (id: string) => Promise<void>;
-  // Equipamentos
+  // Equipamentos & Categorias
+  equipmentCategories: EquipmentCategoryItem[];
+  saveEquipmentCategories: (categories: EquipmentCategoryItem[]) => Promise<void>;
   addEquipment: (data: Omit<Equipment, 'id' | 'churchId' | 'createdAt'>) => Promise<void>;
   updateEquipment: (id: string, data: Partial<Equipment>) => Promise<void>;
   deleteEquipment: (id: string) => Promise<void>;
@@ -856,6 +861,79 @@ export const ChurchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const equipmentCategories = useMemo<EquipmentCategoryItem[]>(() => {
+    if (church?.equipmentCategories && church.equipmentCategories.length > 0) {
+      return church.equipmentCategories;
+    }
+    return DEFAULT_EQUIPMENT_CATEGORIES;
+  }, [church]);
+
+  const saveEquipmentCategories = async (nextCategories: EquipmentCategoryItem[]) => {
+    if (!church || !isLeader) {
+      throw new Error('Apenas líderes e administradores podem alterar categorias.');
+    }
+    if (!Array.isArray(nextCategories) || nextCategories.length === 0) {
+      throw new Error('Mantenha pelo menos uma categoria de equipamento.');
+    }
+    if (nextCategories.length > 40) {
+      throw new Error('Limite máximo de 40 categorias atingido.');
+    }
+
+    const allowedVariants: CategoryBadgeVariant[] = [
+      'default',
+      'success',
+      'warning',
+      'danger',
+      'info',
+      'purple',
+    ];
+    const seenIds = new Set<string>();
+    const sanitized: EquipmentCategoryItem[] = [];
+
+    for (const item of nextCategories) {
+      const cleanLabel = assertSafeText(item.label, 'Nome da Categoria', 50);
+      const rawId = (item.id || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '_')
+        .slice(0, 48);
+      if (!rawId || !isSafeDocId(rawId) || seenIds.has(rawId)) {
+        throw new Error(`Identificador inválido ou duplicado para categoria "${cleanLabel}".`);
+      }
+      seenIds.add(rawId);
+      const variant: CategoryBadgeVariant = allowedVariants.includes(item.variant || 'default')
+        ? (item.variant as CategoryBadgeVariant)
+        : 'default';
+      sanitized.push({ id: rawId, label: cleanLabel, variant });
+    }
+
+    try {
+      await updateDoc(doc(db, 'churches', church.id), {
+        equipmentCategories: sanitized,
+      });
+
+      const fallbackId =
+        sanitized.find((c) => c.id === 'other')?.id || sanitized[0].id;
+      const orphanedEquipments = equipments.filter((eq) => !seenIds.has(eq.category));
+      if (orphanedEquipments.length > 0) {
+        await Promise.all(
+          orphanedEquipments.map((eq) =>
+            updateDoc(doc(db, `churches/${church.id}/equipments`, eq.id), {
+              category: fallbackId,
+            })
+          )
+        );
+      }
+
+      setChurch((prev) => (prev ? { ...prev, equipmentCategories: sanitized } : null));
+      setAllChurches((prev) =>
+        prev.map((c) => (c.id === church.id ? { ...c, equipmentCategories: sanitized } : c))
+      );
+    } catch (err) {
+      throw toFriendlyFirestoreError(err, 'Não foi possível salvar as categorias.');
+    }
+  };
+
   // CRUD Equipamentos
   const addEquipment = async (data: Omit<Equipment, 'id' | 'churchId' | 'createdAt'>) => {
     if (!church || !isLeader) {
@@ -863,13 +941,17 @@ export const ChurchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     const cleanName = assertSafeText(data.name, 'Nome do Equipamento', 100);
     const cleanDesc = data.description ? assertSafeText(data.description, 'Descrição', 300) : '';
+    const cleanCategory = (data.category || 'other').trim();
+    if (!isSafeDocId(cleanCategory) || cleanCategory.length > 64) {
+      throw new Error('Categoria de equipamento inválida.');
+    }
 
     const id = `eq_${Date.now()}`;
     const eq: Equipment = {
       id,
       churchId: church.id,
       name: cleanName,
-      category: data.category,
+      category: cleanCategory,
       description: cleanDesc,
       status: data.status,
       createdAt: new Date().toISOString(),
@@ -881,7 +963,13 @@ export const ChurchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!church || !isLeader || !isValidFirestoreId(id)) return;
     const payload: Partial<Equipment> = {};
     if (data.name !== undefined) payload.name = assertSafeText(data.name, 'Nome do Equipamento', 100);
-    if (data.category !== undefined) payload.category = data.category;
+    if (data.category !== undefined) {
+      const cleanCategory = data.category.trim();
+      if (!isSafeDocId(cleanCategory) || cleanCategory.length > 64) {
+        throw new Error('Categoria de equipamento inválida.');
+      }
+      payload.category = cleanCategory;
+    }
     if (data.status !== undefined) payload.status = data.status;
     if (data.description !== undefined) payload.description = assertSafeText(data.description, 'Descrição', 300);
 
@@ -1471,6 +1559,8 @@ export const ChurchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         deleteMember,
         approveMember,
         rejectMember,
+        equipmentCategories,
+        saveEquipmentCategories,
         addEquipment,
         updateEquipment,
         deleteEquipment,

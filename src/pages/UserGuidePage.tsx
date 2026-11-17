@@ -23,11 +23,16 @@ import { BrandLogo as Logo } from '../components/ui/BrandLogo';
 
 export const UserGuidePage: React.FC = () => {
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = 'Manual_Como_Usar_Connect_Minist_A4';
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto pb-16 animate-in fade-in duration-300 print:p-0 print:pb-0 print:max-w-full print:w-full">
+    <div className="w-full max-w-[210mm] mx-auto pb-16 animate-in fade-in duration-300 print:p-0 print:pb-0 print:max-w-full print:w-full">
       {/* Barra Superior de Exportação (Oculta na Impressão) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-white border border-black/[0.06] shadow-sm mb-6 no-print">
         <div className="flex items-center gap-3">
@@ -35,11 +40,16 @@ export const UserGuidePage: React.FC = () => {
             <BookOpen className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-[#1D1D1F]">
-              Manual do Usuário — Connect Minist / MídiaEscala
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-sm font-bold text-[#1D1D1F]">
+                Manual do Usuário — Connect Minist / MídiaEscala
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0071E3]/10 text-[#0071E3] whitespace-nowrap">
+                Padrão A4 (210×297 mm)
+              </span>
+            </div>
             <p className="text-xs text-gray-500">
-              Guia ilustrado passo a passo atualizado para Voluntários e Líderes pronto para salvar em PDF
+              Guia ilustrado passo a passo configurado em formato A4 para salvar em PDF ou imprimir
             </p>
           </div>
         </div>
@@ -49,12 +59,12 @@ export const UserGuidePage: React.FC = () => {
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-md shadow-[#0071E3]/25 transition-all cursor-pointer whitespace-nowrap shrink-0"
         >
           <Printer className="w-4 h-4" />
-          <span>Baixar / Imprimir Manual em PDF</span>
+          <span>Imprimir / PDF (A4)</span>
         </button>
       </div>
 
-      {/* FOLHA DO MANUAL EM PDF */}
-      <div className="pdf-sheet w-full box-border bg-white rounded-3xl border border-black/[0.06] p-6 sm:p-10 print:p-0 shadow-[0_4px_30px_rgba(0,0,0,0.04)] space-y-8 print:space-y-4 text-[#1D1D1F]">
+      {/* FOLHA DO MANUAL EM PDF (PADRÃO A4) */}
+      <div className="pdf-sheet w-full box-border bg-white rounded-3xl border border-black/[0.06] p-6 sm:p-[12mm] print:p-0 shadow-[0_4px_30px_rgba(0,0,0,0.04)] space-y-6 print:space-y-4 text-[#1D1D1F]">
         {/* Cabeçalho */}
         <div className="border-b border-black/[0.08] pb-6 print:pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">

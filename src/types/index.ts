@@ -5,13 +5,30 @@
 
 export type UserRole = 'superadmin' | 'ministry_admin' | 'leader' | 'volunteer';
 
-export type EquipmentCategory =
-  | 'video'
-  | 'audio'
-  | 'lighting'
-  | 'projection'
-  | 'broadcast'
-  | 'other';
+export type CategoryBadgeVariant =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'purple';
+
+export type EquipmentCategory = string;
+
+export interface EquipmentCategoryItem {
+  id: string;
+  label: string;
+  variant?: CategoryBadgeVariant;
+}
+
+export const DEFAULT_EQUIPMENT_CATEGORIES: EquipmentCategoryItem[] = [
+  { id: 'video', label: 'Vídeo / Câmeras', variant: 'info' },
+  { id: 'audio', label: 'Áudio / Som', variant: 'purple' },
+  { id: 'lighting', label: 'Iluminação', variant: 'warning' },
+  { id: 'projection', label: 'Projeção / Telão', variant: 'success' },
+  { id: 'broadcast', label: 'Transmissão', variant: 'info' },
+  { id: 'other', label: 'Outros', variant: 'default' },
+];
 
 export type EquipmentStatus = 'available' | 'maintenance';
 
@@ -35,6 +52,7 @@ export interface Church {
   inviteCode: string;
   leaderId: string;
   createdAt: string;
+  equipmentCategories?: EquipmentCategoryItem[];
 }
 
 export interface Member {

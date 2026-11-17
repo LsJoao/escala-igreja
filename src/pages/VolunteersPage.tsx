@@ -47,6 +47,7 @@ export const VolunteersPage: React.FC = () => {
     setSkillLevel,
     getSkillLevel,
     equipments,
+    equipmentCategories,
     events,
   } = useChurch();
 
@@ -848,16 +849,8 @@ export const VolunteersPage: React.FC = () => {
                         <span className="text-xs font-bold text-[#1D1D1F] block truncate">
                           {eq.name}
                         </span>
-                        <span className="text-[10px] text-gray-500 capitalize">
-                          {eq.category === 'video'
-                            ? 'Vídeo'
-                            : eq.category === 'audio'
-                            ? 'Áudio'
-                            : eq.category === 'lighting'
-                            ? 'Iluminação'
-                            : eq.category === 'projection'
-                            ? 'Projeção'
-                            : 'Transmissão'}
+                        <span className="text-[10px] text-gray-500">
+                          {equipmentCategories.find((c) => c.id === eq.category)?.label || eq.category}
                           {isSavingThis ? ' • Salvando...' : ''}
                         </span>
                       </div>

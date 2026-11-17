@@ -17,6 +17,7 @@ import {
 import { useChurch } from '../contexts/ChurchContext';
 import { Avatar } from '../components/ui/Avatar';
 import { SlotStatusBadge } from '../components/ui/Badge';
+import { BrandLogo } from '../components/ui/BrandLogo';
 import { EventSchedule } from '../types';
 import { openSafeExternalUrl, getLocalTodayStr, safeFormatDateBR } from '../utils/security';
 
@@ -98,7 +99,19 @@ export const CalendarPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-300">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-300 print:pb-0">
+      {/* Cabeçalho Exclusivo para Impressão PDF com Logo Centralizada */}
+      <div className="hidden print:flex items-center justify-between gap-4 border-b border-black/[0.08] pb-3 mb-4">
+        <BrandLogo
+          size="md"
+          showText={true}
+          subtitle={`${church?.name || 'Ministério de Mídia'} • ${monthNames[month]} ${year}`}
+        />
+        <span className="text-[11px] font-semibold text-gray-500">
+          Calendário Mensal Oficial
+        </span>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

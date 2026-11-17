@@ -4,7 +4,13 @@
  */
 
 import React from 'react';
-import { SkillLevel, SlotStatus, EquipmentCategory } from '../../types';
+import {
+  SkillLevel,
+  SlotStatus,
+  EquipmentCategory,
+  DEFAULT_EQUIPMENT_CATEGORIES,
+} from '../../types';
+import { useChurch } from '../../contexts/ChurchContext';
 
 interface BadgeProps {
   children?: React.ReactNode;
@@ -92,7 +98,11 @@ export const SlotStatusBadge: React.FC<{ status: SlotStatus }> = ({ status }) =>
 };
 
 export const CategoryBadge: React.FC<{ category: EquipmentCategory }> = ({ category }) => {
-  const map: Record<EquipmentCategory, { label: string; variant: BadgeProps['variant'] }> = {
+  const { equipmentCategories } = useChurch();
+  const list = equipmentCategories.length > 0 ? equipmentCategories : DEFAULT_EQUIPMENT_CATEGORIES;
+  const found = list.find((item) => item.id === category);
+
+  const fallbackMap: Record<string, { label: string; variant: BadgeProps['variant'] }> = {
     video: { label: 'Vídeo', variant: 'info' },
     audio: { label: 'Áudio', variant: 'purple' },
     lighting: { label: 'Iluminação', variant: 'warning' },
@@ -100,7 +110,11 @@ export const CategoryBadge: React.FC<{ category: EquipmentCategory }> = ({ categ
     broadcast: { label: 'Transmissão', variant: 'info' },
     other: { label: 'Outros', variant: 'default' },
   };
-  const c = map[category] || { label: category, variant: 'default' };
+
+  const c = found
+    ? { label: found.label, variant: found.variant || 'default' }
+    : fallbackMap[category] || { label: category, variant: 'default' };
+
   return (
     <Badge variant={c.variant} size="sm">
       {c.label}

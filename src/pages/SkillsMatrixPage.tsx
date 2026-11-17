@@ -18,7 +18,7 @@ import { Avatar } from '../components/ui/Avatar';
 import { SkillLevel } from '../types';
 
 export const SkillsMatrixPage: React.FC = () => {
-  const { members, equipments, skills, isLeader, setSkillLevel, getSkillLevel } = useChurch();
+  const { members, equipments, equipmentCategories, skills, isLeader, setSkillLevel, getSkillLevel } = useChurch();
 
   const [searchMember, setSearchMember] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -139,27 +139,27 @@ export const SkillsMatrixPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 w-full sm:w-auto overflow-x-auto text-xs font-semibold">
-          {['all', 'video', 'audio', 'lighting', 'projection', 'broadcast'].map((cat) => (
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all cursor-pointer ${
+              selectedCategory === 'all'
+                ? 'bg-[#0071E3] text-white shadow-xs'
+                : 'text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            Todas as Áreas
+          </button>
+          {equipmentCategories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
               className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === cat
+                selectedCategory === cat.id
                   ? 'bg-[#0071E3] text-white shadow-xs'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
             >
-              {cat === 'all'
-                ? 'Todas as Áreas'
-                : cat === 'video'
-                ? 'Vídeo'
-                : cat === 'audio'
-                ? 'Áudio'
-                : cat === 'lighting'
-                ? 'Luz'
-                : cat === 'projection'
-                ? 'Projeção'
-                : 'Transmissão'}
+              {cat.label}
             </button>
           ))}
         </div>

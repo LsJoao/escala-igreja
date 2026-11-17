@@ -82,10 +82,20 @@ service cloud.firestore {
 
     // Validadores de Esquema (Anti-Injeção e Integridade de Tipos)
     function isValidChurch(data) {
-      return data.keys().hasOnly(['id', 'name', 'inviteCode', 'leaderId', 'createdAt']) &&
+      return data.keys().hasOnly(['id', 'name', 'inviteCode', 'leaderId', 'createdAt', 'equipmentCategories']) &&
         data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
         data.inviteCode is string && data.inviteCode.size() >= 3 && data.inviteCode.size() <= 32 &&
-        data.leaderId is string && data.leaderId.size() > 0 && data.leaderId.size() <= 128;
+        data.leaderId is string && data.leaderId.size() > 0 && data.leaderId.size() <= 128 &&
+        (!('equipmentCategories' in data) || (
+          data.equipmentCategories is list &&
+          data.equipmentCategories.size() <= 40 &&
+          (data.equipmentCategories.size() == 0 || (
+            data.equipmentCategories[0] is map &&
+            data.equipmentCategories[0].keys().hasAll(['id', 'label']) &&
+            data.equipmentCategories[0].id is string &&
+            data.equipmentCategories[0].label is string
+          ))
+        ));
     }
 
     function isValidMember(data, churchId) {
@@ -108,7 +118,7 @@ service cloud.firestore {
       return data.keys().hasOnly(['id', 'churchId', 'name', 'category', 'description', 'status', 'createdAt']) &&
         data.churchId == churchId &&
         data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
-        data.category in ['video', 'audio', 'lighting', 'projection', 'broadcast', 'other'] &&
+        isValidId(data.category) && data.category.size() <= 64 &&
         data.status in ['available', 'maintenance'] &&
         (!('description' in data) || (data.description is string && data.description.size() <= 300));
     }
@@ -180,10 +190,15 @@ service cloud.firestore {
       allow get: if isSignedIn() && isValidId(churchId);
       allow list: if isSignedIn();
       allow create: if isSuperAdmin() && isValidId(churchId) && isValidChurch(request.resource.data);
-      allow update: if isValidId(churchId) && (isSuperAdmin() || isMinistryAdmin(churchId)) &&
+      allow update: if isValidId(churchId) &&
         isValidChurch(request.resource.data) &&
         request.resource.data.leaderId == resource.data.leaderId &&
-        request.resource.data.createdAt == resource.data.createdAt;
+        request.resource.data.createdAt == resource.data.createdAt && (
+          isSuperAdmin() ||
+          isMinistryAdmin(churchId) ||
+          (isLeader(churchId) &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['equipmentCategories']))
+        );
       allow delete: if isSuperAdmin() && isValidId(churchId);
 
       // Membros / Voluntários

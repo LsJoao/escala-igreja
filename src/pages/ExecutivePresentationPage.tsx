@@ -29,7 +29,12 @@ export const ExecutivePresentationPage: React.FC = () => {
   const { church, isLeader } = useChurch();
 
   const handlePrint = () => {
+    const prevTitle = document.title;
+    document.title = 'Apresentacao_Executiva_Connect_Minist_A4';
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 500);
   };
 
   if (!isLeader) {
@@ -64,7 +69,7 @@ export const ExecutivePresentationPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto pb-16 animate-in fade-in duration-300 print:p-0 print:pb-0 print:max-w-full print:w-full">
+    <div className="w-full max-w-[210mm] mx-auto pb-16 animate-in fade-in duration-300 print:p-0 print:pb-0 print:max-w-full print:w-full">
       {/* Barra de Ação Superior (Oculta na Impressão) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-white border border-black/[0.06] shadow-sm mb-6 no-print">
         <div className="flex items-center gap-3">
@@ -79,9 +84,12 @@ export const ExecutivePresentationPage: React.FC = () => {
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-800 border border-amber-500/20 whitespace-nowrap">
                 Líder & ADM
               </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0071E3]/10 text-[#0071E3] whitespace-nowrap">
+                Padrão A4
+              </span>
             </div>
             <p className="text-xs text-gray-500">
-              Documento formal atualizado para Diretoria Executiva, Pastores e Liderança
+              Documento formal em formato A4 (210×297 mm) para Diretoria, Pastores e Liderança
             </p>
           </div>
         </div>
@@ -91,12 +99,12 @@ export const ExecutivePresentationPage: React.FC = () => {
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-md shadow-[#0071E3]/25 transition-all cursor-pointer whitespace-nowrap shrink-0"
         >
           <Printer className="w-4 h-4" />
-          <span>Salvar / Imprimir como PDF</span>
+          <span>Imprimir / PDF (A4)</span>
         </button>
       </div>
 
-      {/* DOCUMENTO EXECUTIVO / PITCH DECK */}
-      <div className="pdf-sheet w-full box-border bg-white rounded-3xl border border-black/[0.06] p-6 sm:p-10 print:p-0 shadow-[0_4px_30px_rgba(0,0,0,0.04)] space-y-8 print:space-y-4 text-[#1D1D1F]">
+      {/* DOCUMENTO EXECUTIVO / PITCH DECK (PADRÃO A4) */}
+      <div className="pdf-sheet w-full box-border bg-white rounded-3xl border border-black/[0.06] p-6 sm:p-[12mm] print:p-0 shadow-[0_4px_30px_rgba(0,0,0,0.04)] space-y-6 print:space-y-4 text-[#1D1D1F]">
         {/* Cabeçalho do Documento */}
         <div className="border-b border-black/[0.08] pb-6 print:pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4 print:mb-2">

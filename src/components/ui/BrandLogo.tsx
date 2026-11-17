@@ -34,7 +34,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+    <div className={`pdf-logo inline-flex items-center gap-2.5 select-none ${className}`}>
       <img
         src={logoImg}
         alt="Connect Minist"
