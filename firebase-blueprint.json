@@ -1,0 +1,188 @@
+{
+  "entities": {
+    "Church": {
+      "title": "Church",
+      "description": "Igreja ou congregação dona do ministério de mídia",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "inviteCode": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string" },
+        "leaderId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["name", "inviteCode", "leaderId"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Membro ou voluntário do ministério de mídia",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "role": { "type": "string", "enum": ["superadmin", "ministry_admin", "leader", "volunteer"] },
+        "active": { "type": "boolean" },
+        "approvalStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "reviewedAt": { "type": "string", "maxLength": 64 },
+        "reviewedBy": { "type": "string", "maxLength": 120 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "name", "role", "active"]
+    },
+    "Equipment": {
+      "title": "Equipment",
+      "description": "Equipamento ou posto de operação do ministério",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["video", "audio", "lighting", "projection", "broadcast", "other"] },
+        "description": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["available", "maintenance"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "name", "category", "status"]
+    },
+    "Skill": {
+      "title": "Skill",
+      "description": "Habilitação de um voluntário para operar determinado equipamento",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "memberId": { "type": "string", "maxLength": 128 },
+        "equipmentId": { "type": "string", "maxLength": 128 },
+        "level": { "type": "string", "enum": ["training", "qualified", "instructor"] },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "memberId", "equipmentId", "level"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Culto, ensaio ou evento especial da igreja",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 120 },
+        "date": { "type": "string", "maxLength": 10 },
+        "startTime": { "type": "string", "maxLength": 5 },
+        "endTime": { "type": "string", "maxLength": 5 },
+        "type": { "type": "string", "enum": ["sunday_service", "midweek_service", "rehearsal", "special_event"] },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "title", "date", "startTime", "type"]
+    },
+    "Slot": {
+      "title": "Slot",
+      "description": "Posição na escala vinculada a um evento e equipamento",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "eventId": { "type": "string", "maxLength": 128 },
+        "roleName": { "type": "string", "maxLength": 80 },
+        "equipmentId": { "type": "string", "maxLength": 128 },
+        "memberId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "declined"] },
+        "declineReason": { "type": "string", "maxLength": 300 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "eventId", "roleName", "equipmentId", "status"]
+    },
+    "Unavailability": {
+      "title": "Unavailability",
+      "description": "Período ou data em que o voluntário não pode servir",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "memberId": { "type": "string", "maxLength": 128 },
+        "startDate": { "type": "string", "maxLength": 10 },
+        "endDate": { "type": "string", "maxLength": 10 },
+        "reason": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "memberId", "startDate", "endDate"]
+    },
+    "SwapRequest": {
+      "title": "SwapRequest",
+      "description": "Pedido de troca de escala entre voluntários",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "eventId": { "type": "string", "maxLength": 128 },
+        "slotId": { "type": "string", "maxLength": 128 },
+        "requesterMemberId": { "type": "string", "maxLength": 128 },
+        "candidateMemberId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["open", "accepted_by_peer", "approved", "rejected"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["churchId", "eventId", "slotId", "requesterMemberId", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Avisos e notificações internas do ministério",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "churchId": { "type": "string", "maxLength": 128 },
+        "targetMemberId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 120 },
+        "message": { "type": "string", "maxLength": 300 },
+        "type": { "type": "string", "maxLength": 32 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "link": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["churchId", "title", "message", "read"]
+    }
+  },
+  "firestore": {
+    "/churches/{churchId}": {
+      "schema": "Church",
+      "description": "Coleção de igrejas"
+    },
+    "/churches/{churchId}/members/{memberId}": {
+      "schema": "Member",
+      "description": "Voluntários e líderes da igreja"
+    },
+    "/churches/{churchId}/equipments/{equipmentId}": {
+      "schema": "Equipment",
+      "description": "Equipamentos de mídia da igreja"
+    },
+    "/churches/{churchId}/skills/{skillId}": {
+      "schema": "Skill",
+      "description": "Matriz de habilitação de voluntários em equipamentos"
+    },
+    "/churches/{churchId}/events/{eventId}": {
+      "schema": "Event",
+      "description": "Cultos e eventos cadastrados"
+    },
+    "/churches/{churchId}/events/{eventId}/slots/{slotId}": {
+      "schema": "Slot",
+      "description": "Posições escaladas para cada evento"
+    },
+    "/churches/{churchId}/unavailability/{unavailabilityId}": {
+      "schema": "Unavailability",
+      "description": "Datas de indisponibilidade dos voluntários"
+    },
+    "/churches/{churchId}/swaps/{swapId}": {
+      "schema": "SwapRequest",
+      "description": "Pedidos de troca de escala"
+    },
+    "/churches/{churchId}/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Notificações internas para os membros"
+    }
+  }
+}

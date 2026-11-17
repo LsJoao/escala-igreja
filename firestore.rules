@@ -1,0 +1,296 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Bloqueio padrão para qualquer coleção inesperada (Zero Trust)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function isValidDateString(d) {
+      return d is string && d.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidTimeString(t) {
+      return t is string && (t == '' || t.matches('^([01]\\d|2[0-3]):([0-5]\\d)$'));
+    }
+
+    // Administrador Geral do Site / Sistema (exige e-mail verificado)
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == "joao.gls000@gmail.com" &&
+        request.auth.token.email_verified == true;
+    }
+
+    function memberPath(churchId, uid) {
+      return /databases/$(database)/documents/churches/$(churchId)/members/$(uid);
+    }
+
+    function churchPath(churchId) {
+      return /databases/$(database)/documents/churches/$(churchId);
+    }
+
+    // Administrador do Ministério da Igreja Local
+    function isMinistryAdmin(churchId) {
+      return isSignedIn() && (
+        isSuperAdmin() ||
+        (exists(churchPath(churchId)) &&
+         get(churchPath(churchId)).data.leaderId == request.auth.uid) ||
+        (exists(memberPath(churchId, request.auth.uid)) &&
+         get(memberPath(churchId, request.auth.uid)).data.active == true &&
+         get(memberPath(churchId, request.auth.uid)).data.role in ['superadmin', 'ministry_admin'])
+      );
+    }
+
+    // Líder de Equipe / Coordenador Aprovado
+    function isLeader(churchId) {
+      return isSignedIn() && (
+        isMinistryAdmin(churchId) ||
+        (exists(memberPath(churchId, request.auth.uid)) &&
+         get(memberPath(churchId, request.auth.uid)).data.active == true &&
+         get(memberPath(churchId, request.auth.uid)).data.approvalStatus != 'rejected' &&
+         get(memberPath(churchId, request.auth.uid)).data.role in ['superadmin', 'ministry_admin', 'leader'])
+      );
+    }
+
+    // Membro já vinculado (mesmo pendente)
+    function isChurchMember(churchId) {
+      return isSignedIn() && (
+        isLeader(churchId) ||
+        exists(memberPath(churchId, request.auth.uid))
+      );
+    }
+
+    // Membro homologado/aprovado para leitura dos dados da igreja
+    function isApprovedChurchMember(churchId) {
+      return isSignedIn() && (
+        isLeader(churchId) ||
+        (exists(memberPath(churchId, request.auth.uid)) &&
+         get(memberPath(churchId, request.auth.uid)).data.active == true &&
+         get(memberPath(churchId, request.auth.uid)).data.approvalStatus != 'pending' &&
+         get(memberPath(churchId, request.auth.uid)).data.approvalStatus != 'rejected')
+      );
+    }
+
+    // Validadores de Esquema (Anti-Injeção e Integridade de Tipos)
+    function isValidChurch(data) {
+      return data.keys().hasOnly(['id', 'name', 'inviteCode', 'leaderId', 'createdAt']) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+        data.inviteCode is string && data.inviteCode.size() >= 3 && data.inviteCode.size() <= 32 &&
+        data.leaderId is string && data.leaderId.size() > 0 && data.leaderId.size() <= 128;
+    }
+
+    function isValidMember(data, churchId) {
+      return data.keys().hasOnly([
+          'id', 'churchId', 'userId', 'name', 'email', 'phone',
+          'role', 'active', 'approvalStatus', 'reviewedAt', 'reviewedBy',
+          'notes', 'createdAt'
+        ]) &&
+        data.churchId == churchId &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 120)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        data.role in ['superadmin', 'ministry_admin', 'leader', 'volunteer'] &&
+        data.active is bool &&
+        (!('approvalStatus' in data) || data.approvalStatus in ['pending', 'approved', 'rejected']);
+    }
+
+    function isValidEquipment(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'name', 'category', 'description', 'status', 'createdAt']) &&
+        data.churchId == churchId &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.category in ['video', 'audio', 'lighting', 'projection', 'broadcast', 'other'] &&
+        data.status in ['available', 'maintenance'] &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 300));
+    }
+
+    function isValidSkill(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'memberId', 'equipmentId', 'level', 'updatedAt']) &&
+        data.churchId == churchId &&
+        isValidId(data.memberId) &&
+        isValidId(data.equipmentId) &&
+        data.level in ['training', 'qualified', 'instructor'];
+    }
+
+    function isValidEvent(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'title', 'date', 'startTime', 'endTime', 'type', 'notes', 'createdAt']) &&
+        data.churchId == churchId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        isValidDateString(data.date) &&
+        isValidTimeString(data.startTime) &&
+        (!('endTime' in data) || isValidTimeString(data.endTime)) &&
+        data.type in ['sunday_service', 'midweek_service', 'rehearsal', 'special_event'] &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500));
+    }
+
+    function isValidSlot(data, churchId, eventId) {
+      return data.keys().hasOnly(['id', 'churchId', 'eventId', 'roleName', 'equipmentId', 'memberId', 'status', 'declineReason', 'updatedAt']) &&
+        data.churchId == churchId &&
+        data.eventId == eventId &&
+        data.roleName is string && data.roleName.size() >= 1 && data.roleName.size() <= 80 &&
+        isValidId(data.equipmentId) &&
+        (!('memberId' in data) || data.memberId == '' || isValidId(data.memberId)) &&
+        data.status in ['pending', 'confirmed', 'declined'] &&
+        (!('declineReason' in data) || (data.declineReason is string && data.declineReason.size() <= 300));
+    }
+
+    function isValidUnavailability(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'memberId', 'startDate', 'endDate', 'reason', 'createdAt']) &&
+        data.churchId == churchId &&
+        isValidId(data.memberId) &&
+        isValidDateString(data.startDate) &&
+        isValidDateString(data.endDate) &&
+        data.endDate >= data.startDate &&
+        (!('reason' in data) || (data.reason is string && data.reason.size() <= 300));
+    }
+
+    function isValidSwap(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'eventId', 'slotId', 'requesterMemberId', 'candidateMemberId', 'status', 'notes', 'createdAt']) &&
+        data.churchId == churchId &&
+        isValidId(data.eventId) &&
+        isValidId(data.slotId) &&
+        isValidId(data.requesterMemberId) &&
+        (!('candidateMemberId' in data) || isValidId(data.candidateMemberId)) &&
+        data.status in ['open', 'accepted_by_peer', 'approved', 'rejected'] &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 300));
+    }
+
+    function isValidNotification(data, churchId) {
+      return data.keys().hasOnly(['id', 'churchId', 'targetMemberId', 'title', 'message', 'type', 'read', 'createdAt', 'link']) &&
+        data.churchId == churchId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 300 &&
+        data.read is bool &&
+        (!('type' in data) || (data.type is string && data.type.size() <= 32)) &&
+        (!('link' in data) || (data.link is string && data.link.size() <= 200)) &&
+        (!('targetMemberId' in data) || (data.targetMemberId is string && data.targetMemberId.size() <= 128));
+    }
+
+    // Coleção principal de Igrejas
+    match /churches/{churchId} {
+      allow get: if isSignedIn() && isValidId(churchId);
+      allow list: if isSignedIn();
+      allow create: if isSuperAdmin() && isValidId(churchId) && isValidChurch(request.resource.data);
+      allow update: if isValidId(churchId) && (isSuperAdmin() || isMinistryAdmin(churchId)) &&
+        isValidChurch(request.resource.data) &&
+        request.resource.data.leaderId == resource.data.leaderId &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isSuperAdmin() && isValidId(churchId);
+
+      // Membros / Voluntários
+      match /members/{memberId} {
+        allow get: if isSignedIn() && (isApprovedChurchMember(churchId) || request.auth.uid == memberId);
+        allow list: if isApprovedChurchMember(churchId);
+
+        allow create: if isSignedIn() && isValidId(memberId) && isValidMember(request.resource.data, churchId) && (
+          isSuperAdmin() ||
+          (isMinistryAdmin(churchId) && request.resource.data.role != 'superadmin') ||
+          (isLeader(churchId) && request.resource.data.role in ['leader', 'volunteer']) ||
+          (request.auth.uid == memberId &&
+           request.resource.data.role == 'volunteer' &&
+           request.resource.data.active == false &&
+           request.resource.data.approvalStatus == 'pending')
+        );
+
+        allow update: if isSignedIn() && isValidMember(request.resource.data, churchId) && (
+          isSuperAdmin() ||
+          (isMinistryAdmin(churchId) && request.resource.data.role != 'superadmin' && (!('role' in resource.data) || resource.data.role != 'superadmin')) ||
+          (isLeader(churchId) && request.resource.data.role in ['leader', 'volunteer'] && (!('role' in resource.data) || resource.data.role in ['leader', 'volunteer'])) ||
+          (request.auth.uid == memberId &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'notes']))
+        );
+
+        allow delete: if isSuperAdmin() ||
+          (isMinistryAdmin(churchId) && (!('role' in resource.data) || resource.data.role != 'superadmin')) ||
+          (isLeader(churchId) && (!('role' in resource.data) || resource.data.role in ['leader', 'volunteer']));
+      }
+
+      // Equipamentos
+      match /equipments/{equipmentId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create, update: if isLeader(churchId) && isValidId(equipmentId) && isValidEquipment(request.resource.data, churchId);
+        allow delete: if isLeader(churchId);
+      }
+
+      // Habilitações (Skills)
+      match /skills/{skillId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create, update: if isLeader(churchId) && isValidId(skillId) && isValidSkill(request.resource.data, churchId);
+        allow delete: if isLeader(churchId);
+      }
+
+      // Eventos / Cultos
+      match /events/{eventId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create, update: if isLeader(churchId) && isValidId(eventId) && isValidEvent(request.resource.data, churchId);
+        allow delete: if isLeader(churchId);
+
+        // Posições / Slots na Escala
+        match /slots/{slotId} {
+          allow read: if isApprovedChurchMember(churchId);
+          allow create: if isLeader(churchId) && isValidId(slotId) && isValidSlot(request.resource.data, churchId, eventId);
+          allow delete: if isLeader(churchId);
+          allow update: if isValidSlot(request.resource.data, churchId, eventId) && (
+            isLeader(churchId) || (
+              isApprovedChurchMember(churchId) &&
+              resource.data.memberId == request.auth.uid &&
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'declineReason', 'updatedAt'])
+            )
+          );
+        }
+      }
+
+      // Indisponibilidades
+      match /unavailability/{unavailabilityId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create: if isApprovedChurchMember(churchId) && isValidId(unavailabilityId) &&
+          isValidUnavailability(request.resource.data, churchId) &&
+          (isLeader(churchId) || request.resource.data.memberId == request.auth.uid);
+        allow update: if isApprovedChurchMember(churchId) &&
+          isValidUnavailability(request.resource.data, churchId) &&
+          (isLeader(churchId) || resource.data.memberId == request.auth.uid);
+        allow delete: if isApprovedChurchMember(churchId) &&
+          (isLeader(churchId) || resource.data.memberId == request.auth.uid);
+      }
+
+      // Pedidos de Troca
+      match /swaps/{swapId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create: if isApprovedChurchMember(churchId) && isValidId(swapId) &&
+          isValidSwap(request.resource.data, churchId) &&
+          (isLeader(churchId) || (request.resource.data.requesterMemberId == request.auth.uid && request.resource.data.status == 'open'));
+        allow update: if isValidSwap(request.resource.data, churchId) && (
+          isLeader(churchId) || (
+            isApprovedChurchMember(churchId) &&
+            resource.data.status == 'open' &&
+            request.resource.data.status == 'accepted_by_peer' &&
+            request.resource.data.candidateMemberId == request.auth.uid &&
+            resource.data.requesterMemberId != request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['candidateMemberId', 'status'])
+          )
+        );
+        allow delete: if isLeader(churchId) || (isApprovedChurchMember(churchId) && resource.data.requesterMemberId == request.auth.uid);
+      }
+
+      // Notificações
+      match /notifications/{notificationId} {
+        allow read: if isApprovedChurchMember(churchId);
+        allow create: if isChurchMember(churchId) && isValidId(notificationId) && isValidNotification(request.resource.data, churchId);
+        allow update: if isApprovedChurchMember(churchId) && (
+          isLeader(churchId) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        );
+        allow delete: if isLeader(churchId);
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A84FF" />
+      <stop offset="100%" stop-color="#0058C6" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0058C6" flood-opacity="0.25" />
+    </filter>
+  </defs>
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#grad)" filter="url(#shadow)" />
+  
+  <!-- Subtle inner lens ring -->
+  <circle cx="256" cy="256" r="160" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="8" />
+
+  <!-- Media camera / aperture stylized icon -->
+  <g transform="translate(136, 136)" fill="none" stroke="#FFFFFF" stroke-width="20" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Camera body -->
+    <rect x="16" y="56" width="168" height="136" rx="28" fill="rgba(255,255,255,0.08)" stroke="#FFFFFF" stroke-width="20" />
+    <!-- Recording light / lens -->
+    <circle cx="100" cy="124" r="42" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="18" />
+    <circle cx="100" cy="124" r="16" fill="#FFFFFF" />
+    <!-- Broadcast beam / antenna -->
+    <path d="M184 92 L224 64 L224 184 L184 156 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="12" stroke-linejoin="round" />
+    <!-- Sound wave accents -->
+    <path d="M50 24 Q100 0 150 24" stroke="rgba(255,255,255,0.7)" stroke-width="12" stroke-linecap="round" fill="none" />
+  </g>
+</svg>
