@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Users,
   UserPlus,
@@ -18,13 +19,14 @@ import {
   Share2,
   X,
   Send,
-  Sparkles,
+  Wrench,
+  Grid3X3,
 } from 'lucide-react';
 import { useChurch } from '../contexts/ChurchContext';
 import { Avatar } from '../components/ui/Avatar';
 import { RoleBadge } from '../components/ui/Badge';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { Member, UserRole } from '../types';
+import { Member, SkillLevel, UserRole } from '../types';
 import { formatWhatsAppDigits, getLocalTodayStr, openSafeExternalUrl } from '../utils/security';
 
 export const VolunteersPage: React.FC = () => {
@@ -42,6 +44,8 @@ export const VolunteersPage: React.FC = () => {
     approveMember,
     rejectMember,
     skills,
+    setSkillLevel,
+    getSkillLevel,
     equipments,
     events,
   } = useChurch();
@@ -62,6 +66,11 @@ export const VolunteersPage: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<number>(0);
   const [customText, setCustomText] = useState('');
 
+  // Modal rápido de Habilitações ("Apto a Operar") por voluntário
+  const [skillsModalMember, setSkillsModalMember] = useState<Member | null>(null);
+  const [savingSkillEqId, setSavingSkillEqId] = useState<string | null>(null);
+  const [skillsModalError, setSkillsModalError] = useState('');
+
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,6 +78,7 @@ export const VolunteersPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('volunteer');
   const [active, setActive] = useState(true);
   const [notes, setNotes] = useState('');
+  const [draftSkills, setDraftSkills] = useState<Record<string, SkillLevel | null>>({});
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -80,6 +90,7 @@ export const VolunteersPage: React.FC = () => {
     setRole('volunteer');
     setActive(true);
     setNotes('');
+    setDraftSkills({});
     setFormError('');
     setIsModalOpen(true);
   };
@@ -92,6 +103,11 @@ export const VolunteersPage: React.FC = () => {
     setRole(m.role);
     setActive(m.active);
     setNotes(m.notes || '');
+    const initialDraft: Record<string, SkillLevel | null> = {};
+    equipments.forEach((eq) => {
+      initialDraft[eq.id] = getSkillLevel(m.id, eq.id);
+    });
+    setDraftSkills(initialDraft);
     setFormError('');
     setIsModalOpen(true);
   };
@@ -103,6 +119,7 @@ export const VolunteersPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      let targetMemberId = editingMember?.id;
       if (editingMember) {
         await updateMember(editingMember.id, {
           name: name.trim(),
@@ -113,7 +130,7 @@ export const VolunteersPage: React.FC = () => {
           notes: notes.trim(),
         });
       } else {
-        await addMember({
+        targetMemberId = await addMember({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
@@ -122,11 +139,38 @@ export const VolunteersPage: React.FC = () => {
           notes: notes.trim(),
         });
       }
+
+      if (targetMemberId && equipments.length > 0) {
+        for (const eq of equipments) {
+          const desired = draftSkills[eq.id] ?? null;
+          const previous = editingMember ? getSkillLevel(editingMember.id, eq.id) : null;
+          if (desired !== previous) {
+            await setSkillLevel(targetMemberId, eq.id, desired);
+          }
+        }
+      }
+
       setIsModalOpen(false);
     } catch (err: unknown) {
       setFormError((err as Error)?.message || 'Não foi possível salvar os dados do voluntário.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleQuickSkillChange = async (
+    memberId: string,
+    equipmentId: string,
+    level: SkillLevel | null
+  ) => {
+    setSkillsModalError('');
+    setSavingSkillEqId(equipmentId);
+    try {
+      await setSkillLevel(memberId, equipmentId, level);
+    } catch (err: unknown) {
+      setSkillsModalError((err as Error)?.message || 'Não foi possível atualizar a habilitação.');
+    } finally {
+      setSavingSkillEqId(null);
     }
   };
 
@@ -552,9 +596,25 @@ export const VolunteersPage: React.FC = () => {
 
                   {/* Habilitações Aptas */}
                   <div className="mt-4 pt-3 border-t border-black/[0.04]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1.5">
-                      Apto a Operar ({memberSkills.length}):
-                    </span>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        Apto a Operar ({memberSkills.length}):
+                      </span>
+                      {isLeader && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSkillsModalError('');
+                            setSkillsModalMember(member);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071E3]/10 text-[#0071E3] hover:bg-[#0071E3]/20 transition-colors cursor-pointer"
+                          title="Definir equipamentos que este voluntário está apto a operar"
+                        >
+                          <Wrench className="w-2.5 h-2.5" />
+                          <span>{memberSkills.length === 0 ? 'Apontar' : 'Editar'}</span>
+                        </button>
+                      )}
+                    </div>
                     {memberSkills.length === 0 ? (
                       <span className="text-[11px] text-gray-400">
                         Nenhuma habilitação vinculada.
@@ -566,9 +626,14 @@ export const VolunteersPage: React.FC = () => {
                           return (
                             <span
                               key={sk.id}
-                              className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0071E3]/10 text-[#0071E3] truncate max-w-[140px]"
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold truncate max-w-[140px] ${
+                                sk.level === 'instructor'
+                                  ? 'bg-purple-500/10 text-purple-700'
+                                  : 'bg-[#0071E3]/10 text-[#0071E3]'
+                              }`}
                               title={eq?.name}
                             >
+                              {sk.level === 'instructor' ? '★ ' : '✓ '}
                               {eq?.name || 'Equipamento'}
                             </span>
                           );
@@ -722,10 +787,139 @@ export const VolunteersPage: React.FC = () => {
         </div>
       )}
 
+      {/* Modal de Apontar Equipamentos Aptos do Voluntário */}
+      {skillsModalMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-black/5 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-black/5 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <Avatar name={skillsModalMember.name} size="md" />
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-[#1D1D1F] truncate">
+                    Apto a Operar — {skillsModalMember.name}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Toque no nível para cada equipamento do ministério
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSkillsModalMember(null)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {skillsModalError && (
+              <div className="mt-3 p-3 rounded-2xl bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200 shrink-0">
+                {skillsModalError}
+              </div>
+            )}
+
+            <div className="mt-4 overflow-y-auto space-y-2.5 pr-1 flex-1">
+              {equipments.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-[#F5F5F7] text-center space-y-2">
+                  <p className="text-xs font-semibold text-[#1D1D1F]">
+                    Nenhum equipamento cadastrado ainda.
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    Cadastre câmeras, mesas de som, projeção ou transmissão na aba Equipamentos para vincular ao voluntário.
+                  </p>
+                  <Link
+                    to="/equipments"
+                    onClick={() => setSkillsModalMember(null)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-[#0071E3] text-white hover:bg-[#0077ED] mt-1"
+                  >
+                    Ir para Equipamentos
+                  </Link>
+                </div>
+              ) : (
+                equipments.map((eq) => {
+                  const currentLevel = getSkillLevel(skillsModalMember.id, eq.id);
+                  const isSavingThis = savingSkillEqId === eq.id;
+
+                  return (
+                    <div
+                      key={eq.id}
+                      className="p-3 rounded-2xl bg-[#F5F5F7] border border-black/[0.04] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                    >
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-[#1D1D1F] block truncate">
+                          {eq.name}
+                        </span>
+                        <span className="text-[10px] text-gray-500 capitalize">
+                          {eq.category === 'video'
+                            ? 'Vídeo'
+                            : eq.category === 'audio'
+                            ? 'Áudio'
+                            : eq.category === 'lighting'
+                            ? 'Iluminação'
+                            : eq.category === 'projection'
+                            ? 'Projeção'
+                            : 'Transmissão'}
+                          {isSavingThis ? ' • Salvando...' : ''}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 flex-wrap shrink-0">
+                        {(
+                          [
+                            { val: null, label: '— Não', activeCls: 'bg-gray-700 text-white' },
+                            { val: 'training', label: '⏳ Treino', activeCls: 'bg-amber-600 text-white' },
+                            { val: 'qualified', label: '✓ Apto', activeCls: 'bg-emerald-600 text-white' },
+                            { val: 'instructor', label: '★ Instrutor', activeCls: 'bg-purple-600 text-white' },
+                          ] as const
+                        ).map((opt) => {
+                          const isSelected = currentLevel === opt.val;
+                          return (
+                            <button
+                              key={String(opt.val)}
+                              type="button"
+                              disabled={isSavingThis}
+                              onClick={() => handleQuickSkillChange(skillsModalMember.id, eq.id, opt.val)}
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50 ${
+                                isSelected
+                                  ? `${opt.activeCls} shadow-xs`
+                                  : 'bg-white text-gray-600 hover:bg-black/5 border border-black/5'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between gap-2 shrink-0">
+              <Link
+                to="/skills"
+                onClick={() => setSkillsModalMember(null)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0071E3] hover:underline"
+              >
+                <Grid3X3 className="w-3.5 h-3.5" />
+                <span>Abrir Matriz Completa</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSkillsModalMember(null)}
+                className="px-5 py-2 rounded-full text-xs font-semibold bg-[#0071E3] text-white hover:bg-[#0077ED] shadow-sm cursor-pointer"
+              >
+                Concluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Criação / Edição de Voluntário */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-black/5">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-black/5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-black/5">
               <h3 className="text-base font-bold text-[#1D1D1F]">
                 {editingMember ? 'Editar Voluntário' : 'Novo Voluntário'}
@@ -826,6 +1020,68 @@ export const VolunteersPage: React.FC = () => {
                 <label htmlFor="activeCheck" className="text-xs font-semibold text-[#1D1D1F]">
                   Voluntário Ativo para Escalas
                 </label>
+              </div>
+
+              {/* Seção Apto a Operar dentro do formulário do voluntário */}
+              <div className="pt-3 border-t border-black/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    Apto a Operar (Equipamentos)
+                  </label>
+                  <span className="text-[10px] text-gray-400">
+                    {Object.values(draftSkills).filter((v) => v === 'qualified' || v === 'instructor').length} aptos
+                  </span>
+                </div>
+
+                {equipments.length === 0 ? (
+                  <p className="text-[11px] text-gray-400 p-2.5 rounded-2xl bg-black/[0.02]">
+                    Nenhum equipamento cadastrado ainda. Cadastre em <strong>Equipamentos</strong> para selecionar aqui.
+                  </p>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    {equipments.map((eq) => {
+                      const val = draftSkills[eq.id] ?? null;
+                      return (
+                        <div
+                          key={eq.id}
+                          className="p-2 rounded-2xl bg-black/[0.02] border border-black/[0.04] flex items-center justify-between gap-2"
+                        >
+                          <span className="text-[11px] font-semibold text-[#1D1D1F] truncate">
+                            {eq.name}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {(
+                              [
+                                { lvl: null, txt: '—', activeCls: 'bg-gray-600 text-white' },
+                                { lvl: 'training', txt: 'Treino', activeCls: 'bg-amber-600 text-white' },
+                                { lvl: 'qualified', txt: 'Apto', activeCls: 'bg-emerald-600 text-white' },
+                                { lvl: 'instructor', txt: 'Instr.', activeCls: 'bg-purple-600 text-white' },
+                              ] as const
+                            ).map((o) => (
+                              <button
+                                key={String(o.lvl)}
+                                type="button"
+                                onClick={() =>
+                                  setDraftSkills((prev) => ({
+                                    ...prev,
+                                    [eq.id]: o.lvl,
+                                  }))
+                                }
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors cursor-pointer ${
+                                  val === o.lvl
+                                    ? o.activeCls
+                                    : 'bg-white text-gray-500 hover:bg-black/5 border border-black/5'
+                                }`}
+                              >
+                                {o.txt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex items-center justify-end gap-2 pt-3 border-t border-black/5">

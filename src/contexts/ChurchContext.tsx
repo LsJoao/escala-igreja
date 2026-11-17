@@ -70,7 +70,7 @@ interface ChurchContextType {
   joinChurchByCode: (inviteCode: string) => Promise<boolean>;
   refreshChurches: () => Promise<void>;
   // Membros & Aprovação de Acesso
-  addMember: (data: Omit<Member, 'id' | 'churchId' | 'createdAt'>) => Promise<void>;
+  addMember: (data: Omit<Member, 'id' | 'churchId' | 'createdAt'>) => Promise<string>;
   updateMember: (id: string, data: Partial<Member>) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   approveMember: (id: string) => Promise<void>;
@@ -761,6 +761,7 @@ export const ChurchProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, `churches/${church.id}/members`, id), member);
+    return id;
   };
 
   const updateMember = async (id: string, data: Partial<Member>) => {

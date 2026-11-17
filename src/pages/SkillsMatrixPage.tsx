@@ -4,14 +4,14 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Grid3X3,
   Search,
-  Filter,
   Check,
-  AlertTriangle,
   Info,
   ChevronDown,
+  Video,
 } from 'lucide-react';
 import { useChurch } from '../contexts/ChurchContext';
 import { Avatar } from '../components/ui/Avatar';
@@ -166,9 +166,26 @@ export const SkillsMatrixPage: React.FC = () => {
       </div>
 
       {/* A Matriz Voluntários x Equipamentos */}
-      <div className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {equipments.length === 0 ? (
+        <div className="rounded-3xl bg-white p-10 text-center border border-black/[0.04] shadow-sm space-y-3">
+          <Video className="w-10 h-10 text-gray-300 mx-auto" />
+          <h3 className="text-sm font-bold text-[#1D1D1F]">
+            Nenhum equipamento cadastrado ainda
+          </h3>
+          <p className="text-xs text-gray-500 max-w-md mx-auto">
+            Para apontar o que cada voluntário está apto a operar, cadastre primeiro as câmeras, mesas de som, iluminação ou projeção na aba Equipamentos.
+          </p>
+          <Link
+            to="/equipments"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm"
+          >
+            Cadastrar Equipamentos
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-3xl bg-white border border-black/[0.04] shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-visible">
+          <div className="overflow-x-auto pb-36 -mb-32">
+            <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-black/[0.06] bg-black/[0.02]">
                 <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider text-gray-400 sticky left-0 bg-white/95 backdrop-blur-sm z-20 min-w-[180px]">
@@ -308,6 +325,7 @@ export const SkillsMatrixPage: React.FC = () => {
           </table>
         </div>
       </div>
+      )}
 
       {/* Dica da Liderança */}
       <div className="flex items-start gap-3 p-4 rounded-3xl bg-[#0071E3]/5 border border-[#0071E3]/15 text-xs text-[#0071E3]">
